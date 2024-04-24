@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-let model, renderer, scene, camera;
+let model, renderer, scene, camera, mixer;
 init();
 function init() {
 	const loader = new GLTFLoader();
@@ -27,16 +27,32 @@ function init() {
 	const controls = new OrbitControls(camera, renderer.domElement);
 	controls.enableDamping = true;
 
-	loader.load("Showrov3D.glb", function (gltf) {
+	loader.load("Showrov.glb", function (gltf) {
 		model = gltf.scene;
 		console.log("🚀 ~ model:", model);
 		model.position.set(0, -1, -2);
 		scene.add(gltf.scene);
+		mixer = new THREE.AnimationMixer(model);
+		let clips = gltf.animations;
+		PlayAnimation(clips, "dancing2");
+		animate();
 	});
-	function animate() {
-		requestAnimationFrame(animate);
-		renderer.render(scene, camera);
-		controls.update();
-	}
-	animate();
+}
+function animate() {
+	renderer.setAnimationLoop(render);
+	requestAnimationFrame(animate);
+	renderer.render(scene, camera);
+}
+
+function PlayAnimation(clips, animationName) {
+	console.log(clips, animationName);
+	let animation = clips.find((clip) => clip.name === animationName);
+
+	animation = mixer.clipAction(animation);
+	animation.timeScale = 1.7;
+	animation.play();
+}
+function render() {
+	mixer.update(0.01);
+	renderer.render(scene, camera);
 }
